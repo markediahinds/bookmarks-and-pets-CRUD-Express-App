@@ -6,6 +6,9 @@ const bookmarks = express.Router()
 // Import the bookmarks model
 const bookmarksArray = require('../models/bookmark')
 
+// Import the validation functions from ../validations/bookmarkvalidation.js
+const { checkForNameKey } = require('../validations/bookmarkValidations')
+
 // Index Routes: gets all of the bookmark
 // localhost:4001/bookmarks
 bookmarks.get('/', (req, res) => {
@@ -22,13 +25,12 @@ bookmarks.get('/:arrayIndex', (req, res) => {
     if(bookmarksArray[arrayIndex]){
         res.status(200).json(bookmarksArray[arrayIndex])
     } else {
-        res.status(404).json({error: `Pet Not Found`})
+        res.status(404).json({error: `Bookmark Not Found`})
     }
-    res.json(bookmarksArray[arrayIndex])
 })
 
 // POST Route: creates a new bookmark and adds it to our array
-bookmarks.post('/', (req, res) => {
+bookmarks.post('/', checkForNameKey, (req, res) => {
     // req.params
     // req.query 
     // req is a big object that holds information about our request
@@ -39,8 +41,22 @@ bookmarks.post('/', (req, res) => {
 
 bookmarks.delete('/:arrayIndex', (req, res) => {
     const { arrayIndex } = req.params
-    const deletedBookmark = bookmarksArray.splice(arrayIndex, 1)
-    res.json(deletedBookmark[0])
+    if(bookmarksArray[arrayIndex]){
+        const deletedBookmark = bookmarksArray.splice(arrayIndex, 1)
+        res.json(deletedBookmark[0])
+    } else {
+        res.json({error: `Bookmark Not Found`})
+    }
+    
 })
+
+// PUT Route (UPDATE) will update a specific bookmark in our bookmark array to be the body of the request
+// localhost:4001/bookmarks/2
+bookmarks.put(`/:arrayIndex`, checkForNameKey, (req, res) => {
+    const { arrayIndex } = req.params
+    bookmarksArray[arrayIndex] = req.body
+    res.status(200).json(bookmarksArray[arrayIndex])
+})
+
 
 module.exports = bookmarks
